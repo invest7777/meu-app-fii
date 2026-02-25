@@ -74,7 +74,7 @@ for i, (ticker, nome) in enumerate(monitor.items()):
 
 st.markdown("---")
 
-# --- LINHA 3: SISTEMA DE NOTÍCIAS MULTI-FONTE (FIM DO ERRO DE SINCRONIZAÇÃO) ---
+# --- LINHA 3: SISTEMA DE NOTÍCIAS MULTI-FONTE ---
 st.subheader("📰 Notícias do Mercado (World Stream)")
 
 def carregar_noticias_blindadas():
