@@ -1,4 +1,6 @@
-pyTelegramBotAPI
-yfinance
-matplotlib
+streamlit
 pandas
+plotly
+yfinance
+telebot
+matplotlib
