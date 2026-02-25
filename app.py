@@ -2,10 +2,10 @@ import streamlit as st
 import feedparser
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ELITE ---
+# --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Script para evitar conflitos com o tradutor do navegador
+# Script para evitar que o Google Tradutor quebre o app
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -25,7 +25,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS FIXOS (R$ 29.773,28) ---
+# --- DADOS FIXOS (SEU PATRIMÔNIO REAL) ---
 patrimonio = 29773.28
 divs_est = patrimonio * 0.0096 
 
@@ -41,25 +41,28 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 
 st.markdown("---")
 
-# --- SISTEMA DE NOTÍCIAS SEGURO ---
+# --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
 def buscar_noticias():
-    # Portais de alta credibilidade (Sem Fake News)
+    # Portais oficiais (RSS Feeds)
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
         "Valor Econômico": "https://valor.globo.com"
     }
     feed_final = []
+    
     for nome, url in fontes.items():
         try:
-            # Tenta ler o feed com timeout para não travar o app
+            # Tenta ler cada fonte de forma independente
             d = feedparser.parse(url)
             if d.entries:
                 for entry in d.entries[:3]: 
                     feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
-        except: continue
+        except Exception:
+            continue # Se uma fonte falhar, tenta a próxima
+            
     return feed_final
 
 noticias = buscar_noticias()
@@ -81,8 +84,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Caso as 3 fontes falhem ao mesmo tempo (problema de rede do Streamlit)
-    st.error("⚠️ Sincronizando com os portais... Por favor, clique em 'Reboot App' no painel do Streamlit.")
+    # Mensagem de erro amigável caso tudo falhe
+    st.error("⚠️ Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
