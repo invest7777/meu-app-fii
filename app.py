@@ -21,11 +21,13 @@ st.markdown("""
     .news-card {
         background-color: #161B22; padding: 20px; border-radius: 12px;
         border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
+        transition: 0.3s;
     }
+    .news-card:hover { border-color: #F1C40F; transform: scale(1.01); }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS FIXOS (SEU PATRIMÔNIO REAL CONFORME IMAGEM) ---
+# --- DADOS FIXOS DO SEU PATRIMÔNIO (R$ 29.773,28) ---
 patrimonio = 29773.28
 divs_est = 285.82 
 
@@ -44,9 +46,9 @@ st.markdown("---")
 # --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
-@st.cache_data(ttl=300) # Mantém as notícias em cache por 5 minutos para carregar instantâneo
+@st.cache_data(ttl=600) # Guarda as notícias por 10 minutos para o carregamento ser instantâneo
 def buscar_noticias():
-    # Portais oficiais com credibilidade verificada
+    # Portais oficiais com credibilidade verificada (Sem Fake News)
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
@@ -56,12 +58,13 @@ def buscar_noticias():
     
     for nome, url in fontes.items():
         try:
+            # Tenta ler o feed de cada portal de forma independente
             d = feedparser.parse(url)
             if d.entries:
                 for entry in d.entries[:3]: 
                     feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
         except Exception:
-            continue 
+            continue # Se um portal falhar, tenta o próximo sem travar o app
             
     return feed_final
 
@@ -84,7 +87,7 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Aviso caso o servidor ainda esteja sincronizando
+    # Mensagem de reserva caso o servidor de notícias demore a responder
     st.info("🔄 Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
