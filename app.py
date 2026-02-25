@@ -1,84 +1,78 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
 import yfinance as yf
+import pandas as pd
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="Private Bank Dashboard", layout="wide")
+# --- CONFIGURAÇÃO PREMIUM ---
+st.set_page_config(page_title="Private Bank | Painel Global", layout="wide", page_icon="🏦")
 
-# Estilização Dark Mode
+# CSS Avançado: Cores Profissionais e Efeitos de Card
 st.markdown("""
     <style>
-    .main { background-color: #0E1117; }
-    div[data-testid="stMetric"] { background-color: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 10px; }
-    div[data-testid="stMetricValue"] { color: #2ecc71; }
+    .main { background-color: #0B0E11; }
+    div[data-testid="stMetric"] {
+        background: linear-gradient(135deg, #161B22 0%, #0D1117 100%);
+        border: 1px solid #30363D;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    div[data-testid="stMetricValue"] { color: #00FF88 !important; font-family: 'Inter', sans-serif; font-weight: 800; }
+    .stInfo { background-color: #161B22; border: 1px solid #30363D; border-left: 5px solid #F1C40F; border-radius: 10px; }
+    h1, h2, h3 { color: #FFFFFF; font-family: 'Poppins', sans-serif; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- SEU PATRIMÔNIO REAL (FIXO: R$ 29.773,28) ---
-carteira_fiis = {
-    "MXRF11": 2001.24, "RECR11": 2090.66, "VGHF11": 3009.60,
-    "VISC11": 2097.03, "XPML11": 3448.44, "BTCI11": 2008.10,
-    "HGLG11": 5037.76, "KNCR11": 10080.45
-}
-total_investido = sum(carteira_fiis.values()) # Soma exata: 29.773,28
+# --- DADOS FIXOS (SEU PATRIMÔNIO) ---
+patrimonio = 29773.28
+divs_est = 285.82
 
-# --- CABEÇALHO ---
-st.title("🏛 Private Bank - Dashboard Profissional")
-st.write(f"📊 Consolidado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+# --- CABEÇALHO COM ÍCONES ---
+st.title("🏛️ Banco Privado - Painel Global")
+st.caption(f"🔄 Sincronizado: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
-# --- DASHBOARD DE INDICADORES (SEU VALOR REAL) ---
+# --- DASHBOARD PRINCIPAL ---
 c1, c2, c3 = st.columns(3)
-c1.metric("Patrimônio Total", f"R$ {total_investido:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-c2.metric("Classe Principal", "FIIs (100%)")
-c3.metric("Dividendos Est. (Mês)", f"R$ {total_investido * 0.0096:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+c1.metric("💰 Patrimônio Total", f"R$ {patrimonio:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+c2.metric("📊 Classe Principal", "FIIs (100%)")
+c3.metric("💸 Dividendos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
 st.markdown("---")
 
-# --- MONITOR DE MERCADO (APENAS PARA ACOMPANHAR) ---
-st.markdown("### ⚡ Radar de Mercado (Cripto & Índices)")
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+# --- RADAR DE MERCADO (COM SÍMBOLOS) ---
+st.subheader("⚡ Radar de Mercado (Cripto & Índices)")
+col_m = st.columns(4)
 
-# Lista de ativos para monitorar sem investir
-ativos_monitor = ["BTC-USD", "ETH-USD", "^BVSP", "USDBRL=X"]
-nomes_monitor = ["Bitcoin", "Ethereum", "Ibovespa", "Dólar"]
+monitor = {"BTC-USD": "₿ Bitcoin", "ETH-USD": "Ξ Ethereum", "^BVSP": "🇧🇷 Ibovespa", "USDBRL=X": "💵 Dólar"}
 
-for i, ticker in enumerate(ativos_monitor):
+for i, (ticker, nome) in enumerate(monitor.items()):
     try:
-        dados = yf.Ticker(ticker).fast_info
-        preco = dados['last_price']
-        var = ((preco / dados['previous_close']) - 1) * 100
-        prefixo = "US$ " if "USD" in ticker else "R$ " if "BRL" in ticker else ""
-        col_m1, col_m2, col_m3, col_m4 = [col_m1, col_m2, col_m3, col_m4] # Garante ordem
-        locals()[f"col_m{i+1}"].metric(nomes_monitor[i], f"{prefixo}{preco:,.2f}", f"{var:.2f}%")
+        # Busca dados e garante atualização do yfinance
+        stock = yf.Ticker(ticker)
+        info = stock.fast_info
+        preco = info['last_price']
+        var = ((preco / info['previous_close']) - 1) * 100
+        simbolo = "US$ " if "USD" in ticker else "R$ " if "BRL" in ticker else ""
+        col_m[i].metric(nome, f"{simbolo}{preco:,.2f}", f"{var:.2f}%")
     except: pass
 
 st.markdown("---")
 
-# --- GRÁFICOS E NOTÍCIAS EM TEMPO REAL ---
-col_graf, col_news = st.columns([1.5, 1])
-
-with col_graf:
-    st.markdown("### 📊 Alocação da Carteira")
-    df = pd.DataFrame(list(carteira_fiis.items()), columns=['FII', 'Valor'])
-    fig = px.pie(df, values='Valor', names='FII', hole=0.5, 
-                 color_discrete_sequence=px.colors.sequential.Greens_r)
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_news:
-    st.markdown("### 📰 Notícias em Tempo Real")
-    try:
-        # Busca notícias globais e do Brasil
-        feed = yf.Ticker("^BVSP").news[:5]
-        for n in feed:
-            st.info(f"**{n['title']}**")
-            st.caption(f"[Ler notícia completa]({n['link']})")
-    except:
-        st.write("Conectando ao feed de notícias...")
-
-# --- TABELA DE CONTROLE ---
-with st.expander("👁 Ver Detalhamento dos Ativos"):
-    df_tab = pd.DataFrame(list(carteira_fiis.items()), columns=['Ticker', 'Saldo Atual'])
-    st.table(df_tab.style.format({'Saldo Atual': 'R$ {:.2f}'}))
+# --- CORREÇÃO DAS NOTÍCIAS (SOLUÇÃO REAL-TIME) ---
+st.subheader("📰 Notícias Globais em Tempo Real")
+try:
+    # A dica aqui é usar o índice geral para buscar notícias mundiais
+    news_feed = yf.Ticker("^BVSP").news[:6] 
+    if news_feed:
+        # Layout de 2 colunas para as notícias
+        n_col1, n_col2 = st.columns(2)
+        for i, n in enumerate(news_feed):
+            target_col = n_col1 if i % 2 == 0 else n_col2
+            with target_col:
+                st.info(f"**{n['publisher']}** • _{datetime.fromtimestamp(n['providerPublishTime']).strftime('%H:%M')}_\n\n"
+                        f"**{n['title']}**\n\n"
+                        f"[Clique para ler na íntegra]({n['link']})")
+    else:
+        st.warning("⚠️ O Yahoo Finance limitou o acesso às notícias. Tente atualizar em instantes.")
+except Exception as e:
+    st.error(f"Erro ao carregar feed: {e}")
