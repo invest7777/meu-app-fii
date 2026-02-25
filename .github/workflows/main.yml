@@ -1,0 +1,25 @@
+name: Telegram Automatico Diário
+
+on:
+  schedule:
+    # Agendado para as 09:00 AM (Horário de Brasília)
+    - cron: '0 12 * * *' 
+  workflow_dispatch: # Permite que você rode manualmente para testar
+
+jobs:
+  run_bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixando código do GitHub
+        uses: actions/checkout@v3
+
+      - name: Instalando Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalando Bibliotecas
+        run: pip install yfinance pyTelegramBotAPI pandas
+
+      - name: Executando o Robô
+        run: python bot_telegram.py
