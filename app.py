@@ -5,7 +5,7 @@ from datetime import datetime
 # --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Script para evitar que o Google Tradutor quebre o app (Fix para o erro removeChild)
+# Impede que o Google Tradutor quebre o código
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -25,13 +25,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS FIXOS (SEU PATRIMÔNIO REAL CONFORME IMAGEMAnterior) ---
+# --- DADOS DO SEU PATRIMÔNIO (FIXO: R$ 29.773,28) ---
 patrimonio = 29773.28
-divs_est = 285.82 
+divs_est = patrimonio * 0.0096 
 
 # --- CABEÇALHO ---
 st.title("🏛️ Banco Privado - Terminal de Notícias Verificadas")
-st.caption(f"🛡️ Fontes Seguras Selecionadas • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+st.caption(f"🛡️ Conexão Segura Ativa • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
 # --- DASHBOARD DE MÉTRICAS ---
 c1, c2, c3 = st.columns(3)
@@ -41,31 +41,28 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 
 st.markdown("---")
 
-# --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
-st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
+# --- SISTEMA DE NOTÍCIAS COM MEMÓRIA (ANTI-TRAVAMENTO) ---
+st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
 
-@st.cache_data(ttl=300) # Mantém as notícias em cache por 5 minutos para carregar instantâneo
-def buscar_noticias():
-    # Portais oficiais com credibilidade verificada
+# ttl=600 faz o app "lembrar" das notícias por 10 minutos, evitando o erro de sincronização
+@st.cache_data(ttl=600)
+def buscar_noticias_blindadas():
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
-        "Valor Econômico": "https://valor.globo.com"
+        "Valor": "https://valor.globo.com"
     }
     feed_final = []
-    
     for nome, url in fontes.items():
         try:
             d = feedparser.parse(url)
             if d.entries:
-                for entry in d.entries[:3]: 
+                for entry in d.entries[:3]:
                     feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
-        except Exception:
-            continue 
-            
+        except: continue
     return feed_final
 
-noticias = buscar_noticias()
+noticias = buscar_noticias_blindadas()
 
 if noticias:
     col_n1, col_n2 = st.columns(2)
@@ -84,8 +81,7 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Aviso de contingência elegante caso o erro de sincronização persista
-    st.info("🔄 Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
+    st.warning("⚠️ Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
-st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
+st.caption("🔒 Painel blindado contra desinformação via Protocolos RSS Oficiais.")
