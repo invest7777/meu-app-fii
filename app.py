@@ -1,12 +1,11 @@
 import streamlit as st
 import feedparser
-import yfinance as yf
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
+# --- CONFIGURAÇÃO DE ELITE ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Script para evitar que o Google Tradutor quebre o app (Fix para o erro removeChild)
+# Script para evitar que o Google Tradutor quebre o app
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -22,15 +21,13 @@ st.markdown("""
     .news-card {
         background-color: #161B22; padding: 20px; border-radius: 12px;
         border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
-        transition: 0.3s;
     }
-    .news-card:hover { border-color: #F1C40F; transform: scale(1.01); }
     </style>
     """, unsafe_allow_html=True)
 
 # --- DADOS FIXOS DO SEU PATRIMÔNIO (R$ 29.773,28) ---
 patrimonio = 29773.28
-divs_est = 285.82 
+divs_est = patrimonio * 0.0096 
 
 # --- CABEÇALHO ---
 st.title("🏛️ Banco Privado - Terminal de Notícias Verificadas")
@@ -47,25 +44,21 @@ st.markdown("---")
 # --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
-@st.cache_data(ttl=600) # Guarda as notícias por 10 minutos para o carregamento ser instantâneo
+@st.cache_data(ttl=600) # Guarda as notícias por 10 minutos para carregar instantaneamente
 def buscar_noticias():
-    # Portais oficiais com credibilidade verificada (Sem Fake News)
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
         "Valor Econômico": "https://valor.globo.com"
     }
     feed_final = []
-    
     for nome, url in fontes.items():
         try:
             d = feedparser.parse(url)
             if d.entries:
                 for entry in d.entries[:3]: 
                     feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
-        except Exception:
-            continue # Se um portal falhar, tenta o próximo sem travar o app
-            
+        except Exception: continue
     return feed_final
 
 noticias = buscar_noticias()
@@ -88,6 +81,3 @@ if noticias:
             """, unsafe_allow_html=True)
 else:
     st.info("🔄 Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
-
-st.markdown("---")
-st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
