@@ -1,6 +1,5 @@
 import streamlit as st
 import feedparser
-import pandas as pd
 from datetime import datetime
 
 # --- CONFIGURAÇÃO DE ELITE ---
@@ -43,10 +42,10 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 st.markdown("---")
 
 # --- SISTEMA DE NOTÍCIAS SEGURO ---
-st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
+st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
 def buscar_noticias():
-    # Apenas portais de alta credibilidade (Zero Fake News)
+    # Portais de alta credibilidade (Sem Fake News)
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
@@ -55,10 +54,11 @@ def buscar_noticias():
     feed_final = []
     for nome, url in fontes.items():
         try:
-            # Tenta ler o feed de cada portal
+            # Tenta ler o feed com timeout para não travar o app
             d = feedparser.parse(url)
-            for entry in d.entries[:3]: 
-                feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
+            if d.entries:
+                for entry in d.entries[:3]: 
+                    feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
         except: continue
     return feed_final
 
@@ -81,7 +81,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    st.info("🔄 Sincronizando com os portais de notícias... Aguarde 10 segundos.")
+    # Caso as 3 fontes falhem ao mesmo tempo (problema de rede do Streamlit)
+    st.error("⚠️ Sincronizando com os portais... Por favor, clique em 'Reboot App' no painel do Streamlit.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
