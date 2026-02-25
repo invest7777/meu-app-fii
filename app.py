@@ -5,7 +5,7 @@ from datetime import datetime
 # --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Script para evitar que o Google Tradutor quebre o app
+# Script para evitar que o Google Tradutor quebre o app (Fix para o erro removeChild)
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -44,6 +44,7 @@ st.markdown("---")
 # --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
+@st.cache_data(ttl=300) # Guarda as notícias por 5 min para o app carregar instantâneo
 def buscar_noticias():
     # Portais oficiais (RSS Feeds)
     fontes = {
@@ -84,8 +85,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Mensagem de erro amigável caso tudo falhe
-    st.error("⚠️ Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
+    # Mensagem de espera elegante
+    st.warning("🔄 Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
