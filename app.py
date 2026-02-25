@@ -25,9 +25,9 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS FIXOS (SEU PATRIMÔNIO REAL) ---
+# --- DADOS FIXOS (SEU PATRIMÔNIO REAL CONFORME IMAGEM) ---
 patrimonio = 29773.28
-divs_est = patrimonio * 0.0096 
+divs_est = 285.82 
 
 # --- CABEÇALHO ---
 st.title("🏛️ Banco Privado - Terminal de Notícias Verificadas")
@@ -44,9 +44,9 @@ st.markdown("---")
 # --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
-@st.cache_data(ttl=300) # Guarda as notícias por 5 min para o app carregar instantâneo
+@st.cache_data(ttl=300) # Mantém as notícias em cache por 5 minutos para carregar instantâneo
 def buscar_noticias():
-    # Portais oficiais (RSS Feeds)
+    # Portais oficiais com credibilidade verificada
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
         "G1 Economia": "https://g1.globo.com",
@@ -56,13 +56,12 @@ def buscar_noticias():
     
     for nome, url in fontes.items():
         try:
-            # Tenta ler cada fonte de forma independente
             d = feedparser.parse(url)
             if d.entries:
                 for entry in d.entries[:3]: 
                     feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
         except Exception:
-            continue # Se uma fonte falhar, tenta a próxima
+            continue 
             
     return feed_final
 
@@ -85,8 +84,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Mensagem de espera elegante
-    st.warning("🔄 Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
+    # Aviso caso o servidor ainda esteja sincronizando
+    st.info("🔄 Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
