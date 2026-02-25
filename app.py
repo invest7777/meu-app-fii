@@ -5,7 +5,7 @@ from datetime import datetime
 # --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Impede que o Google Tradutor quebre o código
+# Impede que o Google Tradutor quebre o código (Fix para o erro removeChild)
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -21,7 +21,9 @@ st.markdown("""
     .news-card {
         background-color: #161B22; padding: 20px; border-radius: 12px;
         border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
+        transition: 0.3s;
     }
+    .news-card:hover { border-color: #F1C40F; transform: scale(1.01); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -41,11 +43,10 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 
 st.markdown("---")
 
-# --- SISTEMA DE NOTÍCIAS COM MEMÓRIA (ANTI-TRAVAMENTO) ---
+# --- SISTEMA DE NOTÍCIAS COM CACHE (ANTI-TRAVAMENTO) ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
 
-# ttl=600 faz o app "lembrar" das notícias por 10 minutos, evitando o erro de sincronização
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=600) # Mantém as notícias por 10 min para evitar o erro de sincronização
 def buscar_noticias_blindadas():
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
@@ -81,7 +82,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    st.warning("⚠️ Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
+    # Aviso elegante caso o servidor demore a responder
+    st.info("🔄 Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via Protocolos RSS Oficiais.")
