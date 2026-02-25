@@ -1,12 +1,14 @@
 import yfinance as yf
 import telebot
 import time
+import pandas as pd
 
 # --- CONFIGURAÇÕES ---
-TOKEN = "SEU_TOKEN_AQUI"
-CHAT_ID = "SEU_CHAT_ID_AQUI"
+TOKEN = "7953321564:AAHd_tbtINcXmG31yHF5W7AnY4fnypQLqsQ"
+CHAT_ID = "1430932470"
 bot = telebot.TeleBot(TOKEN)
 
+# Sua carteira real de R$ 31.773,28
 carteira = {
     "MXRF11.SA": 2001.24, "RECR11.SA": 2090.66, "VGHF11.SA": 3009.60, 
     "VISC11.SA": 2097.03, "XPML11.SA": 3448.44, "BTCI11.SA": 2008.10, 
@@ -15,16 +17,32 @@ carteira = {
 
 def enviar_resumo():
     total_patrimonio = 0
-    mensagem = "📊 *Relatório Diário de Investimentos*\n\n"
+    total_renda = 0
+    mensagem = "🏦 *RELATÓRIO DIÁRIO - CARTEIRA FII*\n"
+    mensagem += "------------------------------------\n\n"
     
-    for ticker, valor in carteira.items():
-        fundo = yf.Ticker(ticker)
-        time.sleep(1) # Evita bloqueios
-        preco = fundo.info.get('currentPrice', 1)
-        total_patrimonio += valor
-        mensagem += f"🔹 *{ticker.replace('.SA', '')}*: R$ {valor:,.2f}\n"
+    for ticker, valor_investido in carteira.items():
+        try:
+            fundo = yf.Ticker(ticker)
+            time.sleep(1) # Proteção contra bloqueios
+            info = fundo.info
+            preco = info.get('currentPrice', 1)
+            dividendo = info.get('lastDividendValue', 0)
+            
+            renda_fundo = (valor_investido / preco) * dividendo
+            total_patrimonio += valor_investido
+            total_renda += renda_fundo
+            
+            mensagem += f"🔹 *{ticker.replace('.SA', '')}*: R$ {valor_investido:,.2f}\n"
+        except Exception as e:
+            continue
     
-    mensagem += f"\n💰 *Patrimônio Total: R$ {total_patrimonio:,.2f}*"
+    mensagem += "\n------------------------------------\n"
+    mensagem += f"💰 *Total Investido:* R$ {total_patrimonio:,.2f}\n"
+    mensagem += f"💸 *Renda Mensal Est.:* R$ {total_renda:,.2f}\n"
+    mensagem += f"📅 *Data:* 25/02/2026"
+    
+    # Envia para o seu Telegram
     bot.send_message(CHAT_ID, mensagem, parse_mode="Markdown")
 
 if __name__ == "__main__":
