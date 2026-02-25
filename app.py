@@ -8,33 +8,33 @@ st.set_page_config(page_title="Gestão de Portfólio", layout="wide", page_icon=
 # --- CSS PARA CORES E LAYOUT ---
 st.markdown("""
     <style>
-    .main { background-color: #FFFFFF; }
+    .main { background-color: #F8F9FA; }
     div[data-testid="stMetric"] {
-        background-color: #E0F7FA;
-        border-radius: 10px;
-        padding: 10px;
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 15px;
         border-left: 5px solid #00BCD4;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .stTable { border: 1px solid #f0f2f6; border-radius: 10px; }
     h1, h2, h3 { color: #333333; font-family: 'Segoe UI', sans-serif; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS DE EXEMPLO (CONFORME A TABELA DA IMAGEM) ---
+# --- DADOS CORRIGIDOS (SEM SÍMBOLO DE %) ---
 data = {
     "Project": ["Community Survey", "Email Campaign", "Room Survey", "Support Mobile", "Track Upgrades"],
     "Manager": ["Elsa H.", "Elsa H.", "Elsa H.", "Elsa H.", "Elsa H."],
     "Start": ["01-Dec-23", "16-Sep-23", "20-Sep-23", "01-Oct-23", "25-Aug-23"],
-    "Progress": [9%, 100%, 45%, 70%, 100%],
-    "Effort/Hours": [445, 206, 1211, 450, 1005],
-    "Tasks": [30, 24, 27, 10, 7]
+    "Progress (%)": [9, 100, 45, 70, 100],  # Corrigido aqui (apenas números)
+    "Effort (h)": [450, 120, 310, 200, 80],
+    "Tasks": [12, 5, 8, 15, 3]
 }
 df = pd.DataFrame(data)
 
-# --- LAYOUT SUPERIOR (MÉTRICAS E GRÁFICOS) ---
-st.title("📊 Painel de Desempenho do Investimento do Portfólio")
+# --- LAYOUT SUPERIOR ---
+st.title("📊 Painel de Desempenho do Portfólio")
 
-col_metrics, col_donut1, col_bar, col_donut2 = st.columns([1, 2, 3, 2])
+col_metrics, col_donut1, col_bar, col_donut2 = st.columns([1, 1.5, 2, 1.5])
 
 with col_metrics:
     st.metric("Projetos", "20")
@@ -43,30 +43,29 @@ with col_metrics:
     st.metric("Restantes", "11K")
 
 with col_donut1:
-    st.write("**Progresso do Projeto**")
-    fig1 = px.pie(values=[10, 40, 50], names=["Iniciado", "Em Progresso", "Concluído"], 
-                 hole=0.6, color_discrete_sequence=["#00BCD4", "#1A237E", "#E0F7FA"])
+    st.write("**Progresso Médio**")
+    fig1 = px.pie(values=[45, 55], names=["Concluído", "Pendente"], hole=0.7, 
+                 color_discrete_sequence=["#00BCD4", "#E0F7FA"])
     fig1.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(fig1, use_container_width=True)
 
 with col_bar:
-    st.write("**Esforço por Projeto**")
-    fig2 = px.bar(df, x="Project", y="Effort/Hours", color_discrete_sequence=["#00BCD4"])
-    fig2.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=250)
+    st.write("**Esforço por Projeto (Horas)**")
+    fig2 = px.bar(df, x="Project", y="Effort (h)", color="Project", 
+                 color_discrete_sequence=px.colors.qualitative.Pastel)
+    fig2.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0), height=250)
     st.plotly_chart(fig2, use_container_width=True)
 
 with col_donut2:
-    st.write("**Projetos por Gestor**")
-    fig3 = px.pie(df, values='Tasks', names='Project', hole=0.6, 
+    st.write("**Tarefas por Projeto**")
+    fig3 = px.pie(df, values='Tasks', names='Project', hole=0.7, 
                  color_discrete_sequence=px.colors.sequential.GnBu_r)
     fig3.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
     st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("---")
 
-# --- TABELA DETALHADA INFERIOR ---
-st.subheader("📋 Detalhamento de Ativos e Tarefas")
-st.table(df)
-
-# Rodapé informativo
-st.caption("⚠️ Dados simulados baseados no layout de gestão de projetos enviado.")
+# --- TABELA DETALHADA ---
+st.subheader("📋 Detalhamento de Ativos e Metas")
+# Formata a coluna de progresso para exibir o % de novo, mas apenas visualmente
+st.dataframe(df.style.format({"Progress (%)": "{}%"}), use_container_width=True)
