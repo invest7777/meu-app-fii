@@ -1,28 +1,20 @@
-import streamlit as st
-import yfinance as yf
-import pandas as pd
+import time # Adicione isso no topo do arquivo com os outros imports
 
-st.set_page_config(page_title="Minha Carteira FII", layout="wide")
-
-# Dados do seu patrimônio atual (conforme seu print)
-carteira_atual = {
-    "MXRF11.SA": 2001.24,
-    "RECR11.SA": 2090.66,
-    "VGHF11.SA": 3009.60,
-    "VISC11.SA": 2097.03,
-    "XPML11.SA": 3448.44,
-    "BTCI11.SA": 2008.10,
-    "HGLG11.SA": 5037.76,
-    "KNCR11.SA": 10080.45
-}
-
-st.title("📱 Meu App de Investimentos")
-
-# Buscando dados em tempo real
-resumo_data = []
-total_patrimonio = 0
-total_dividendos_estimados = 0
-
+# ... dentro do seu loop for ...
+for ticker, valor_investido in carteira_atual.items():
+    fundo = yf.Ticker(ticker)
+    
+    # Adicionando uma pequena pausa de 1 segundo para não ser bloqueado
+    time.sleep(1) 
+    
+    # Tenta pegar o preço, se falhar usa o valor 1 para não travar o app
+    try:
+        info = fundo.info
+        preco = info.get('currentPrice', 1)
+        vp = info.get('bookValue', 1)
+        div = info.get('lastDividendValue', 0)
+    except:
+        preco, vp, div = 1, 1, 0
 for ticker, valor_investido in carteira_atual.items():
     fundo = yf.Ticker(ticker)
     preco = fundo.info.get('currentPrice', 1)
@@ -54,4 +46,10 @@ st.subheader("Detalhamento da Carteira")
 st.dataframe(df, use_container_width=True)
 
 st.subheader("Peso de cada Fundo no Patrimônio")
-st.pie_chart(data=pd.DataFrame({"Valor": carteira_atual.values()}, index=carteira_atual.keys()), values="Valor")
+st.subheader("Peso de cada Fundo no Patrimônio")
+# Criando os dados do gráfico de forma simplificada
+df_grafico = pd.DataFrame({
+    'Fundo': list(carteira_atual.keys()),
+    'Valor': list(carteira_atual.values())
+})
+st.bar_chart(df_grafico.set_index('Fundo'))
