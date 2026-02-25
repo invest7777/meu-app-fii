@@ -1,5 +1,7 @@
 import telebot
 import yfinance as yf
+import matplotlib
+matplotlib.use('Agg') # Necessário para rodar no servidor do GitHub
 import matplotlib.pyplot as plt
 import pandas as pd
 from datetime import datetime
@@ -10,7 +12,7 @@ TOKEN = "8714454678:AAHd_tbtINcXmG31yHF5W7AnY4fnypQLqsQ"
 CHAT_ID = "5161568304"
 bot = telebot.TeleBot(TOKEN)
 
-# Sua carteira (Quantidade de cotas)
+# Sua carteira (Quantidade de cotas aproximada para bater R$ 31.773,28)
 carteira_cotas = {
     "MXRF11.SA": 204, "RECR11.SA": 26, "VGHF11.SA": 340, 
     "VISC11.SA": 18,  "XPML11.SA": 31, "BTCI11.SA": 205, 
@@ -19,21 +21,6 @@ carteira_cotas = {
 
 def formatar_br(valor):
     return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-def gerar_grafico(dados_carteira):
-    df = pd.DataFrame(list(dados_carteira.items()), columns=['FII', 'Valor'])
-    df['FII'] = df['FII'].str.replace('.SA', '')
-    
-    plt.figure(figsize=(8, 6))
-    plt.pie(df['Valor'], labels=df['FII'], autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
-    plt.title(f"Distribuição da Carteira - {datetime.now().strftime('%d/%m/%y')}")
-    
-    # Salva o gráfico na memória para enviar ao Telegram
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight')
-    buf.seek(0)
-    plt.close()
-    return buf
 
 def enviar_relatorio_premium():
     try:
@@ -45,22 +32,40 @@ def enviar_relatorio_premium():
         print("📊 Buscando preços na B3...")
         for ticker, qtd in carteira_cotas.items():
             fii = yf.Ticker(ticker)
+            # Pega o último preço disponível
             preco_atual = fii.fast_info['last_price']
             subtotal = preco_atual * qtd
             total_atual += subtotal
-            valores_para_grafico[ticker] = subtotal
             
+            nome_limpo = ticker.replace(".SA", "")
+            valores_para_grafico[nome_limpo] = subtotal
+            
+            # Pega variação para o emoji
             variacao = fii.info.get('regularMarketChangePercent', 0)
             emoji = "📈" if variacao >= 0 else "📉"
-            corpo_msg += f"{emoji} *{ticker.replace('.SA', '')}*\n   └ {formatar_br(preco_atual)} | Total: *{formatar_br(subtotal)}*\n"
+            
+            corpo_msg += f"{emoji} *{nome_limpo}*\n"
+            corpo_msg += f"   └ {formatar_br(preco_atual)} | Total: *{formatar_br(subtotal)}*\n"
 
         corpo_msg += f"\n💰 *PATRIMÔNIO TOTAL:* \n`{formatar_br(total_atual)}`"
+
+        # --- GERAR GRÁFICO ---
+        plt.figure(figsize=(8, 7))
+        cores = plt.cm.Paired.colors
+        plt.pie(valores_para_grafico.values(), labels=valores_para_grafico.keys(), 
+                autopct='%1.1f%%', startangle=140, colors=cores)
+        plt.title(f"Distribuição da Carteira - {datetime.now().strftime('%d/%m/%y')}")
         
-        # 1. Enviar o Gráfico
-        grafico = gerar_grafico(valores_para_grafico)
-        bot.send_photo(CHAT_ID, grafico, caption="📊 *Sua Alocação Atual*", parse_mode="Markdown")
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', bbox_inches='tight')
+        buf.seek(0)
+        plt.close()
+
+        # --- ENVIAR PARA O TELEGRAM ---
+        # 1. Envia a Foto
+        bot.send_photo(CHAT_ID, buf, caption="📊 *Sua Alocação Atual*", parse_mode="Markdown")
         
-        # 2. Enviar o Relatório e Notícias
+        # 2. Busca Notícias e Envia Texto
         try:
             feed = yf.Ticker("^BVSP").news[:3]
             if feed:
@@ -70,10 +75,10 @@ def enviar_relatorio_premium():
         except: pass
 
         bot.send_message(CHAT_ID, corpo_msg, parse_mode="Markdown", disable_web_page_preview=True)
-        print("✅ Relatório e Gráfico enviados!")
+        print("✅ Relatório e Gráfico enviados com sucesso!")
 
     except Exception as e:
-        print(f"❌ Erro: {e}")
+        print(f"❌ Erro crítico: {e}")
 
 if __name__ == "__main__":
     enviar_relatorio_premium()
