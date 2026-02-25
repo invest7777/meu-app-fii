@@ -3,31 +3,38 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ELITE & FIX DE ERRO ---
+# --- CONFIGURAÇÃO DE ELITE ---
 st.set_page_config(page_title="Private Bank | Dashboard", layout="wide", page_icon="🏦")
 
 # Script para evitar que o Google Tradutor quebre o app
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
-# --- CSS PROFISSIONAL ---
+# --- CSS PREMIUM (BLACK & NEON GOLD) ---
 st.markdown("""
     <style>
     .main { background-color: #0E1117; }
     div[data-testid="stMetric"] {
         background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
         border: 1px solid #30363D;
-        border-radius: 15px;
+        border-radius: 12px;
         padding: 25px;
     }
     div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 32px !important; font-weight: bold; }
+    
+    /* ESTILO DOS CARDS DE NOTÍCIAS */
     .news-card {
         background-color: #161B22;
-        padding: 15px;
-        border-radius: 10px;
+        padding: 20px;
+        border-radius: 12px;
         border-left: 5px solid #F1C40F;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
         border: 1px solid #30363D;
+        transition: 0.3s;
     }
+    .news-card:hover { border-color: #F1C40F; transform: translateY(-3px); }
+    .news-tag { color: #F1C40F; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+    .news-title { margin-top: 8px; font-size: 17px; font-weight: bold; color: #FFFFFF; line-height: 1.4; }
+    .news-link { margin-top: 15px; display: inline-block; color: #00FF88; text-decoration: none; font-size: 14px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -37,7 +44,7 @@ divs_estimados = patrimonio * 0.0096
 
 # --- CABEÇALHO ---
 st.title("🏛️ Banco Privado - Terminal de Investimentos")
-st.caption(f"🚀 Status: On-line • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+st.caption(f"🚀 Status: On-line • Conectado à B3 & World Stream • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
 # --- LINHA 1: MÉTRICAS ---
 c1, c2, c3 = st.columns(3)
@@ -64,39 +71,43 @@ for i, (ticker, nome) in enumerate(monitor.items()):
 
 st.markdown("---")
 
-# --- LINHA 3: NOTÍCIAS (SISTEMA DE SEGURANÇA MULTI-FONTE) ---
+# --- LINHA 3: NOTÍCIAS (SISTEMA DE BUSCA BLINDADO) ---
 st.subheader("📰 Notícias do Mercado (World Stream)")
 
-def exibir_noticias():
-    # Tenta buscar notícias de diferentes fontes para garantir que o painel não fique vazio
-    tickers_para_noticias = ["^BVSP", "BTC-USD", "AAPL"]
-    feed = []
+def carregar_noticias_reais():
+    # Tenta buscar notícias de fontes globais mais estáveis
+    fontes = ["^BVSP", "BTC-USD", "AAPL", "MSFT"]
+    feed_final = []
     
-    for t in tickers_para_noticias:
+    for fonte in fontes:
         try:
-            temp_feed = yf.Ticker(t).news
-            if temp_feed:
-                feed.extend(temp_feed)
-            if len(feed) >= 6: break # Para quando tiver notícias suficientes
+            raw_news = yf.Ticker(fonte).news
+            for item in raw_news:
+                # SÓ ADICIONA SE TIVER TÍTULO E LINK REAIS
+                if item.get('title') and item.get('link') and item['title'] != "Sem título":
+                    if item['title'] not in [n['title'] for n in feed_final]: # Evita duplicados
+                        feed_final.append(item)
+            if len(feed_final) >= 8: break
         except: continue
+    return feed_final[:8]
 
-    if feed:
-        col_n1, col_n2 = st.columns(2)
-        for idx, n in enumerate(feed[:8]): # Mostra as 8 mais recentes
-            target_col = col_n1 if idx % 2 == 0 else col_n2
-            with target_col:
-                st.markdown(f"""
-                <div class="news-card">
-                    <small style='color: #F1C40F;'>{n.get('publisher', 'Mercado')}</small><br>
-                    <div style='margin-top: 5px; font-size: 15px; font-weight: bold; color: white;'>{n.get('title', 'Sem título')}</div>
-                    <div style='margin-top: 10px;'>
-                        <a href="{n.get('link', '#')}" target="_blank" style="color: #00FF88; text-decoration: none; font-size: 13px;">
-                            LER RELATÓRIO COMPLETO →
-                        </a>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.warning("⚠️ O servidor de notícias está instável no momento. Tente atualizar a página.")
+noticias = carregar_noticias_reais()
 
-exibir_noticias()
+if noticias:
+    col_n1, col_n2 = st.columns(2)
+    for idx, n in enumerate(noticias):
+        target_col = col_n1 if idx % 2 == 0 else col_n2
+        with target_col:
+            publisher = n.get('publisher', 'MERCADO')
+            st.markdown(f"""
+            <div class="news-card">
+                <span class="news-tag">{publisher}</span>
+                <div class="news-title">{n['title']}</div>
+                <a class="news-link" href="{n['link']}" target="_blank">LER RELATÓRIO COMPLETO +</a>
+            </div>
+            """, unsafe_allow_html=True)
+else:
+    st.warning("🔄 Sincronizando notícias com o servidor global... Tente atualizar em instantes.")
+
+st.markdown("---")
+st.caption("⚠️ Dados fornecidos por Yahoo Finance API. Dashboard para fins de visualização pessoal.")
