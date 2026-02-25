@@ -1,88 +1,91 @@
 import streamlit as st
-import feedparser
+import yfinance as yf
+import pandas as pd
+import plotly.express as px
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ELITE (ANTI-TRAVAMENTO) ---
-st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="Meu Portfólio VIP", layout="wide", page_icon="💰")
 
-# Bloqueia o tradutor do navegador (Isso evita 99% dos erros de sincronização)
-st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
-
-# --- CSS PREMIUM (BLACK & GOLD) ---
+# CSS para visual de banco (Dark Mode)
 st.markdown("""
     <style>
     .main { background-color: #0E1117; }
     div[data-testid="stMetric"] {
         background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
-        border: 1px solid #30363D; border-radius: 12px; padding: 25px;
+        border: 1px solid #30363D;
+        border-radius: 15px;
+        padding: 20px;
     }
-    div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 32px !important; font-weight: 800; }
-    .news-card {
-        background-color: #161B22; padding: 20px; border-radius: 12px;
-        border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
-    }
+    div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 32px !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS DO SEU PATRIMÔNIO (FIXO: R$ 29.773,28) ---
-patrimonio = 29773.28
-divs_est = patrimonio * 0.0096 
+# --- SUA CARTEIRA ATUALIZADA ---
+# Coloque a QUANTIDADE exata de cotas que você possui
+carteira_cotas = {
+    "MXRF11.SA": 204, "RECR11.SA": 26, "VGHF11.SA": 340, 
+    "VISC11.SA": 18,  "XPML11.SA": 31, "BTCI11.SA": 205, 
+    "HGLG11.SA": 31,  "KNCR11.SA": 98
+}
 
-# --- CABEÇALHO ---
-st.title("🏛️ Banco Privado - Terminal de Notícias")
-st.caption(f"🛡️ Conexão Segura Ativa • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-
-# --- DASHBOARD DE MÉTRICAS ---
-c1, c2, c3 = st.columns(3)
-c1.metric("💰 Patrimônio Total", f"R$ {patrimonio:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-c2.metric("📊 Classe Principal", "FIIs (100%)")
-c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-
-st.markdown("---")
-
-# --- SISTEMA DE NOTÍCIAS COM "CIRCUITO DE EMERGÊNCIA" ---
-st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
-
-@st.cache_data(ttl=600) # Lembra as notícias por 10 min para não travar
-def buscar_noticias_blindadas():
-    fontes = {
-        "InfoMoney": "https://www.infomoney.com.br",
-        "G1 Economia": "https://g1.globo.com",
-        "Valor": "https://valor.globo.com"
-    }
-    feed_final = []
-    for nome, url in fontes.items():
+@st.cache_data(ttl=60) # Atualiza os preços a cada 60 segundos
+def buscar_dados_mercado(tickers):
+    dados = {}
+    for ticker in tickers:
         try:
-            d = feedparser.parse(url)
-            if d.entries:
-                for entry in d.entries[:3]:
-                    feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
-        except: continue
-    return feed_final
+            obj = yf.Ticker(ticker)
+            # Pega o último preço de fechamento/atual
+            preco = obj.fast_info['last_price']
+            dados[ticker] = preco
+        except:
+            dados[ticker] = 0
+    return dados
 
-noticias = buscar_noticias_blindadas()
+# --- PROCESSAMENTO DOS DADOS ---
+precos_atuais = buscar_dados_mercado(list(carteira_cotas.keys()))
+detalhes = []
+total_patrimonio = 0
 
-if noticias:
-    col_n1, col_n2 = st.columns(2)
-    for idx, n in enumerate(noticias):
-        target_col = col_n1 if idx % 2 == 0 else col_n2
-        with target_col:
-            st.markdown(f"""
-            <div class="news-card">
-                <small style='color: #F1C40F;'>🔒 FONTE VERIFICADA: {n['fonte']}</small><br>
-                <div style='margin-top: 8px; font-size: 16px; font-weight: bold; color: white;'>{n['titulo']}</div>
-                <div style='margin-top: 12px;'>
-                    <a href="{n['link']}" target="_blank" style="color: #00FF88; text-decoration: none; font-size: 14px; font-weight: bold;">LER NOTÍCIA →</a>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-else:
-    # SE TUDO FALHAR, MOSTRA ISSO (CIRCUITO DE EMERGÊNCIA)
-    st.warning("⚠️ O servidor de notícias está instável. Acesse os portais oficiais diretamente:")
-    e1, e2, e3 = st.columns(3)
-    e1.link_button("🌐 InfoMoney", "https://www.infomoney.com.br")
-    e2.link_button("🌐 G1 Economia", "https://g1.globo.com")
-    e3.link_button("🌐 Valor Econômico", "https://valor.globo.com")
+for ticker, qtd in carteira_cotas.items():
+    preco = precos_atuais[ticker]
+    subtotal = preco * qtd
+    total_patrimonio += subtotal
+    detalhes.append({
+        "Ativo": ticker.replace(".SA", ""),
+        "Qtd": qtd,
+        "Preço Atual": preco,
+        "Total (R$)": subtotal
+    })
+
+df_portfolio = pd.DataFrame(detalhes)
+
+# --- EXIBIÇÃO NO APP ---
+st.title("🏛️ Portfólio de Investimentos - Real Time")
+st.caption(f"Última atualização do mercado: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+# Métricas Principais
+col1, col2 = st.columns(2)
+col1.metric("Patrimônio Total Atualizado", f"R$ {total_patrimonio:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+col2.metric("Total de Ativos", len(carteira_cotas))
 
 st.markdown("---")
-st.caption("🔒 Painel blindado contra desinformação via Protocolos RSS Oficiais.")
+
+# Gráfico de Alocação
+st.subheader("📊 Distribuição de Patrimônio (Valor de Mercado)")
+fig = px.pie(df_portfolio, values='Total (R$)', names='Ativo', hole=0.5,
+             color_discrete_sequence=px.colors.sequential.Greens_r)
+fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
+st.plotly_chart(fig, use_container_width=True)
+
+# Tabela Detalhada
+st.subheader("📋 Detalhamento da Carteira")
+st.dataframe(df_portfolio.style.format({
+    "Preço Atual": "R$ {:.2f}",
+    "Total (R$)": "R$ {:.2f}"
+}), use_container_width=True)
+
+# Botão de Atualização Manual
+if st.button("🔄 Forçar Atualização de Preços"):
+    st.cache_data.clear()
+    st.rerun()
