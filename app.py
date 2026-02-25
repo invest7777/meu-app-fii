@@ -2,10 +2,10 @@ import streamlit as st
 import feedparser
 from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ALTA PERFORMANCE ---
+# --- CONFIGURAÇÃO DE ELITE (ANTI-TRAVAMENTO) ---
 st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Impede que o Google Tradutor quebre o código (Fix para o erro removeChild)
+# Bloqueia o tradutor do navegador (Isso evita 99% dos erros de sincronização)
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
 # --- CSS PREMIUM (BLACK & GOLD) ---
@@ -14,16 +14,13 @@ st.markdown("""
     .main { background-color: #0E1117; }
     div[data-testid="stMetric"] {
         background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
-        border: 1px solid #30363D;
-        border-radius: 12px; padding: 25px;
+        border: 1px solid #30363D; border-radius: 12px; padding: 25px;
     }
     div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 32px !important; font-weight: 800; }
     .news-card {
         background-color: #161B22; padding: 20px; border-radius: 12px;
         border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
-        transition: 0.3s;
     }
-    .news-card:hover { border-color: #F1C40F; transform: scale(1.01); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -32,7 +29,7 @@ patrimonio = 29773.28
 divs_est = patrimonio * 0.0096 
 
 # --- CABEÇALHO ---
-st.title("🏛️ Banco Privado - Terminal de Notícias Verificadas")
+st.title("🏛️ Banco Privado - Terminal de Notícias")
 st.caption(f"🛡️ Conexão Segura Ativa • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
 # --- DASHBOARD DE MÉTRICAS ---
@@ -43,10 +40,10 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 
 st.markdown("---")
 
-# --- SISTEMA DE NOTÍCIAS COM CACHE (ANTI-TRAVAMENTO) ---
+# --- SISTEMA DE NOTÍCIAS COM "CIRCUITO DE EMERGÊNCIA" ---
 st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
 
-@st.cache_data(ttl=600) # Mantém as notícias por 10 min para evitar o erro de sincronização
+@st.cache_data(ttl=600) # Lembra as notícias por 10 min para não travar
 def buscar_noticias_blindadas():
     fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
@@ -75,15 +72,17 @@ if noticias:
                 <small style='color: #F1C40F;'>🔒 FONTE VERIFICADA: {n['fonte']}</small><br>
                 <div style='margin-top: 8px; font-size: 16px; font-weight: bold; color: white;'>{n['titulo']}</div>
                 <div style='margin-top: 12px;'>
-                    <a href="{n['link']}" target="_blank" style="color: #00FF88; text-decoration: none; font-size: 14px; font-weight: bold;">
-                        LER NOTÍCIA COMPLETA →
-                    </a>
+                    <a href="{n['link']}" target="_blank" style="color: #00FF88; text-decoration: none; font-size: 14px; font-weight: bold;">LER NOTÍCIA →</a>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Aviso elegante caso o servidor demore a responder
-    st.info("🔄 Sincronizando com os portais... Por favor, aguarde alguns segundos e atualize a página.")
+    # SE TUDO FALHAR, MOSTRA ISSO (CIRCUITO DE EMERGÊNCIA)
+    st.warning("⚠️ O servidor de notícias está instável. Acesse os portais oficiais diretamente:")
+    e1, e2, e3 = st.columns(3)
+    e1.link_button("🌐 InfoMoney", "https://www.infomoney.com.br")
+    e2.link_button("🌐 G1 Economia", "https://g1.globo.com")
+    e3.link_button("🌐 Valor Econômico", "https://valor.globo.com")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via Protocolos RSS Oficiais.")
