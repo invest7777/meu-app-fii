@@ -25,7 +25,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS FIXOS (SEU PATRIMÔNIO REAL) ---
+# --- DADOS FIXOS (SEU PATRIMÔNIO REAL CONFORME IMAGEMAnterior) ---
 patrimonio = 29773.28
 divs_est = 285.82 
 
@@ -42,7 +42,7 @@ c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").
 st.markdown("---")
 
 # --- SISTEMA DE NOTÍCIAS SEGURO (ANTI-TRAVAMENTO) ---
-st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
+st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
 @st.cache_data(ttl=300) # Mantém as notícias em cache por 5 minutos para carregar instantâneo
 def buscar_noticias():
@@ -84,8 +84,8 @@ if noticias:
             </div>
             """, unsafe_allow_html=True)
 else:
-    # Mensagem de contingência elegante caso o erro de sincronização persista
-    st.warning("⚠️ Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
+    # Aviso de contingência elegante caso o erro de sincronização persista
+    st.info("🔄 Sincronizando com os portais oficiais... Por favor, aguarde alguns segundos e atualize a página.")
 
 st.markdown("---")
 st.caption("🔒 Painel blindado contra desinformação via RSS Feeds Oficiais.")
