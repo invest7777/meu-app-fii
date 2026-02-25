@@ -1,4 +1,1 @@
-streamlit
-yfinance
-pandas
-plotly
+pip install --upgrade yfinance
