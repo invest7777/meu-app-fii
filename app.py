@@ -1,119 +1,72 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
 
-# --- CONFIGURAÇÃO DE ELITE XP ---
-st.set_page_config(page_title="XP Private | Performance", layout="wide", page_icon="🏦")
+# --- CONFIGURAÇÃO DA PÁGINA ---
+st.set_page_config(page_title="Gestão de Portfólio", layout="wide", page_icon="📊")
 
-# Fix para evitar erros de tradução automática do navegador
-st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
-
-# --- ESTILO VISUAL (BLACK & GOLD) ---
+# --- CSS PARA CORES E LAYOUT ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    .main { background-color: #0E1117; }
-    
+    .main { background-color: #FFFFFF; }
     div[data-testid="stMetric"] {
-        background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
-        border: 1px solid #30363D;
-        border-radius: 12px;
-        padding: 20px;
+        background-color: #E0F7FA;
+        border-radius: 10px;
+        padding: 10px;
+        border-left: 5px solid #00BCD4;
     }
-    div[data-testid="stMetricValue"] { color: #C5A059 !important; font-weight: 800; font-size: 30px !important; }
-    .stMetric label { color: #8B949E !important; text-transform: uppercase; font-size: 11px; letter-spacing: 1.5px; }
+    .stTable { border: 1px solid #f0f2f6; border-radius: 10px; }
+    h1, h2, h3 { color: #333333; font-family: 'Segoe UI', sans-serif; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- DADOS REAIS DA SUA CARTEIRA (SOMA INVESTIDA: R$ 29.773,28) ---
-# Aumentei levemente as quantidades para refletir o lucro que você vê no banco
-# Ajuste o campo 'qtd' conforme o que aparece no seu extrato do Nubank
-carteira_dados = {
-    "MXRF11.SA": {"custo": 2001.24, "qtd": 205},
-    "RECR11.SA": {"custo": 2090.66, "qtd": 27},
-    "VGHF11.SA": {"custo": 3009.60, "qtd": 335},
-    "VISC11.SA": {"custo": 2097.03, "qtd": 19},
-    "XPML11.SA": {"custo": 3448.44, "qtd": 31},
-    "BTCI11.SA": {"custo": 2008.10, "qtd": 208},
-    "HGLG11.SA": {"custo": 5037.76, "qtd": 32},
-    "KNCR11.SA": {"custo": 10080.45, "qtd": 100}
+# --- DADOS DE EXEMPLO (CONFORME A TABELA DA IMAGEM) ---
+data = {
+    "Project": ["Community Survey", "Email Campaign", "Room Survey", "Support Mobile", "Track Upgrades"],
+    "Manager": ["Elsa H.", "Elsa H.", "Elsa H.", "Elsa H.", "Elsa H."],
+    "Start": ["01-Dec-23", "16-Sep-23", "20-Sep-23", "01-Oct-23", "25-Aug-23"],
+    "Progress": [9%, 100%, 45%, 70%, 100%],
+    "Effort/Hours": [445, 206, 1211, 450, 1005],
+    "Tasks": [30, 24, 27, 10, 7]
 }
+df = pd.DataFrame(data)
 
-@st.cache_data(ttl=60)
-def sincronizar_cotacoes(tickers):
-    precos = {}
-    for t in tickers:
-        try:
-            ticker_yf = yf.Ticker(t)
-            precos[t] = ticker_yf.fast_info['last_price']
-        except: precos[t] = 0.0
-    return precos
+# --- LAYOUT SUPERIOR (MÉTRICAS E GRÁFICOS) ---
+st.title("📊 Painel de Desempenho do Investimento do Portfólio")
 
-# --- PROCESSAMENTO ---
-cotacoes_b3 = sincronizar_cotacoes(list(carteira_dados.keys()))
-detalhes = []
-total_investido = 0
-total_mercado = 0
+col_metrics, col_donut1, col_bar, col_donut2 = st.columns([1, 2, 3, 2])
 
-for t, info in carteira_dados.items():
-    valor_investido = info['custo']
-    valor_mercado = info['qtd'] * cotacoes_b3[t]
-    diferenca = valor_mercado - valor_investido
-    
-    total_investido += valor_investido
-    total_mercado += valor_mercado
-    
-    detalhes.append({
-        "ATIVO": t.replace(".SA", ""),
-        "INVESTIDO": valor_investido,
-        "VALOR ATUAL": valor_mercado,
-        "RESULTADO": diferenca,
-        "PERF (%)": (diferenca / valor_investido) * 100 if valor_investido > 0 else 0
-    })
+with col_metrics:
+    st.metric("Projetos", "20")
+    st.metric("Tarefas", "18K")
+    st.metric("Completas", "6.398")
+    st.metric("Restantes", "11K")
 
-df = pd.DataFrame(detalhes)
-p_l_total = total_mercado - total_investido
+with col_donut1:
+    st.write("**Progresso do Projeto**")
+    fig1 = px.pie(values=[10, 40, 50], names=["Iniciado", "Em Progresso", "Concluído"], 
+                 hole=0.6, color_discrete_sequence=["#00BCD4", "#1A237E", "#E0F7FA"])
+    fig1.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
+    st.plotly_chart(fig1, use_container_width=True)
 
-# --- LAYOUT XP ---
-st.markdown("<h2 style='color: #C5A059;'>XP PRIVATE | PERFORMANCE</h2>", unsafe_allow_html=True)
-st.caption(f"Consolidado Real-Time B3 • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+with col_bar:
+    st.write("**Esforço por Projeto**")
+    fig2 = px.bar(df, x="Project", y="Effort/Hours", color_discrete_sequence=["#00BCD4"])
+    fig2.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=250)
+    st.plotly_chart(fig2, use_container_width=True)
+
+with col_donut2:
+    st.write("**Projetos por Gestor**")
+    fig3 = px.pie(df, values='Tasks', names='Project', hole=0.6, 
+                 color_discrete_sequence=px.colors.sequential.GnBu_r)
+    fig3.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
+    st.plotly_chart(fig3, use_container_width=True)
 
 st.markdown("---")
 
-# Linha de Métricas Principais
-c1, c2, c3 = st.columns(3)
-c1.metric("VALOR INVESTIDO (CUSTO)", f"R$ {total_investido:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
-c2.metric("VALOR ATUAL (MERCADO)", f"R$ {total_mercado:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), 
-          delta=f"{((total_mercado/total_investido)-1)*100:.2f}%")
-c3.metric("LUCRO / PREJUÍZO", f"R$ {p_l_total:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."), 
-          delta=f"R$ {p_l_total:,.2f}")
+# --- TABELA DETALHADA INFERIOR ---
+st.subheader("📋 Detalhamento de Ativos e Tarefas")
+st.table(df)
 
-st.markdown("---")
-
-col_left, col_right = st.columns([1, 1.5])
-
-with col_left:
-    st.markdown("### 📊 Alocação")
-    fig = px.pie(df, values='VALOR ATUAL', names='ATIVO', hole=0.6,
-                 color_discrete_sequence=px.colors.sequential.YlOrBr_r)
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font_color="white", showlegend=False)
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_right:
-    st.markdown("### 📋 Visão de Performance")
-    st.dataframe(df.style.format({
-        "INVESTIDO": "R$ {:.2f}",
-        "VALOR ATUAL": "R$ {:.2f}",
-        "RESULTADO": "R$ {:.2f}",
-        "PERF (%)": "{:.2f}%"
-    }), hide_index=True, use_container_width=True)
-
-if st.button("🔄 Sincronizar com B3"):
-    st.cache_data.clear()
-    st.rerun()
-
-st.markdown("---")
-st.caption("⚠️ Nota: Ajuste as quantidades de cotas no código para bater com o saldo exato do seu banco.")
+# Rodapé informativo
+st.caption("⚠️ Dados simulados baseados no layout de gestão de projetos enviado.")
