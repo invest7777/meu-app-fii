@@ -1,82 +1,67 @@
 import streamlit as st
 import feedparser
-import pandas as pd
+import yfinance as yf
 from datetime import datetime
 
 # --- CONFIGURAÇÃO DE ELITE ---
-st.set_page_config(page_title="Private Bank | Terminal Seguro", layout="wide", page_icon="🏦")
+st.set_page_config(page_title="Private Bank | Terminal", layout="wide", page_icon="🏦")
 
-# Script anti-erro de interface (desativa tradutor do navegador)
+# Script para evitar que o navegador quebre o layout (Fix para Google Tradutor)
 st.markdown("<script>document.documentElement.className += ' notranslate';</script>", unsafe_allow_html=True)
 
-# --- CSS PREMIUM (MODO DARK DEEP & NEON GOLD) ---
+# --- CSS PREMIUM (BLACK & GOLD) ---
 st.markdown("""
     <style>
-    .main { background-color: #0B0E11; }
+    .main { background-color: #0E1117; }
     div[data-testid="stMetric"] {
         background: linear-gradient(145deg, #161B22 0%, #0D1117 100%);
         border: 1px solid #30363D;
-        border-radius: 12px;
-        padding: 25px;
+        border-radius: 12px; padding: 25px;
     }
-    div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 34px !important; font-weight: 900; }
+    div[data-testid="stMetricValue"] { color: #00FF88 !important; font-size: 32px !important; font-weight: 800; }
     .news-card {
-        background-color: #161B22;
-        padding: 22px;
-        border-radius: 12px;
-        border-left: 6px solid #F1C40F;
-        margin-bottom: 18px;
-        border: 1px solid #30363D;
+        background-color: #161B22; padding: 20px; border-radius: 12px;
+        border-left: 5px solid #F1C40F; margin-bottom: 15px; border: 1px solid #30363D;
     }
-    .news-tag { color: #F1C40F; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-    .news-title { margin-top: 10px; font-size: 18px; font-weight: bold; color: #FFFFFF; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- PATRIMÔNIO REAL (TRAVADO EM R$ 29.773,28) ---
+# --- DADOS FIXOS DO SEU PATRIMÔNIO (R$ 29.773,28) ---
 patrimonio = 29773.28
-divs_estimados = patrimonio * 0.0096 
+divs_est = 285.82
 
-# --- HEADER PRINCIPAL ---
+# --- CABEÇALHO ---
 st.title("🏛️ Banco Privado - Terminal de Notícias Verificadas")
 st.caption(f"🛡️ Fontes Seguras Selecionadas • {datetime.now().strftime('%d/%m/%Y %H:%M')}")
 
-# --- LINHA 1: MÉTRICAS ---
+# --- DASHBOARD DE MÉTRICAS ---
 c1, c2, c3 = st.columns(3)
 c1.metric("💰 Patrimônio Total", f"R$ {patrimonio:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 c2.metric("📊 Classe Principal", "FIIs (100%)")
-c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_estimados:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+c3.metric("💸 Proventos Est. (Mês)", f"R$ {divs_est:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
 st.markdown("---")
 
-# --- SISTEMA DE NOTÍCIAS BLINDADO (RSS FEED) ---
-st.subheader("📰 Notícias em Tempo Real (Fontes Oficiais)")
+# --- SISTEMA DE NOTÍCIAS BLINDADO (FONTES OFICIAIS) ---
+st.subheader("📰 Notícias em Tempo Real (Fontes Verificadas)")
 
-def buscar_noticias_seguras():
-    # LISTA DE FONTES SEGURAS (ADICIONE OU REMOVA AQUI)
-    fontes_rss = {
-        "Reuters Finance": "https://www.reutersagency.com",
+def buscar_noticias():
+    # Fontes RSS de portais de alta credibilidade
+    fontes = {
         "InfoMoney": "https://www.infomoney.com.br",
-        "G1 Economia": "https://g1.globo.com"
+        "G1 Economia": "https://g1.globo.com",
+        "Valor Econômico": "https://valor.globo.com"
     }
-    
-    noticias_validadas = []
-    
-    for nome_fonte, url in fontes_rss.items():
+    feed_final = []
+    for nome, url in fontes.items():
         try:
-            feed = feedparser.parse(url)
-            for entry in feed.entries[:4]: # Pega as 4 mais recentes de cada
-                noticias_validadas.append({
-                    "fonte": nome_fonte,
-                    "titulo": entry.title,
-                    "link": entry.link,
-                    "data": entry.get('published', 'Agora')
-                })
+            d = feedparser.parse(url)
+            for entry in d.entries[:3]: # Pega as 3 mais recentes de cada
+                feed_final.append({"fonte": nome, "titulo": entry.title, "link": entry.link})
         except: continue
-        
-    return noticias_validadas
+    return feed_final
 
-noticias = buscar_noticias_seguras()
+noticias = buscar_noticias()
 
 if noticias:
     col_n1, col_n2 = st.columns(2)
@@ -85,15 +70,17 @@ if noticias:
         with target_col:
             st.markdown(f"""
             <div class="news-card">
-                <span class="news-tag">🔒 FONTE: {n['fonte']}</span>
-                <div class="news-title">{n['titulo']}</div>
-                <a href="{n['link']}" target="_blank" style="color: #00FF88; text-decoration: none; font-weight: bold; font-size: 14px;">
-                    VERIFICAR NOTÍCIA COMPLETA →
-                </a>
+                <small style='color: #F1C40F;'>🔒 FONTE: {n['fonte']}</small><br>
+                <div style='margin-top: 8px; font-size: 16px; font-weight: bold; color: white;'>{n['titulo']}</div>
+                <div style='margin-top: 12px;'>
+                    <a href="{n['link']}" target="_blank" style="color: #00FF88; text-decoration: none; font-size: 14px;">
+                        LER NOTÍCIA COMPLETA →
+                    </a>
+                </div>
             </div>
             """, unsafe_allow_html=True)
 else:
-    st.error("⚠️ Sincronizando com as fontes oficiais... Por favor, aguarde e atualize a página.")
+    st.error("⚠️ Erro de conexão com os portais. Por favor, reinicie o app no painel do Streamlit.")
 
 st.markdown("---")
 st.caption("🔒 Este painel utiliza apenas protocolos oficiais de notícias para evitar desinformação.")
