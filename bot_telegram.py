@@ -1,7 +1,6 @@
-import yfinance as yf
 import telebot
+import yfinance as yf
 import time
-import pandas as pd
 
 # --- CONFIGURAÇÕES ---
 TOKEN = "7953321564:AAHd_tbtINcXmG31yHF5W7AnY4fnypQLqsQ"
